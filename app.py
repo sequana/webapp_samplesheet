@@ -19,7 +19,7 @@ def main():
                 file_details = {"Filename":data_file.name,"FileType":data_file.type,"FileSize":data_file.size}
                 st.write(file_details)
 
-                filename = data_file._file_urls + "/" + data_file.name
+                filename = str(data_file._file_urls) + "/" + data_file.name
             
                 from sequana.iem import IEM
                 iem = IEM(filename)
