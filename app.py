@@ -24,7 +24,7 @@ def main():
                 
                 
                 from sequana.iem import IEM
-                iem = IEM(Path(data_file))
+                iem = IEM("../" + data_file)
                 try:
                     st.write(f"This sample sheet contains {len(iem.df)} samples")
                     iem.validate()
