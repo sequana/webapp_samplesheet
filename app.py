@@ -25,6 +25,7 @@ st.set_page_config(
 )
 
 def main():
+    st.sidebar.image("imgs/logo_256x256.png", use_column_width=True)
     st.title("Sample Sheet validator")
 
     menu = ["Sample Sheet Validation (Illumina)","About"]
