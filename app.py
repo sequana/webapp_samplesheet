@@ -19,8 +19,11 @@ def main():
                 file_details = {"Filename":data_file.name,"FileType":data_file.type,"FileSize":data_file.size}
                 st.write(file_details)
 
-                filename = str(data_file._file_urls) + "/" + data_file.name
-            
+                if os.path.exists(data_file.name) is False:
+                    filename = f"/mount/src/st_sample_sheet/{data_file.name}"
+                else:
+                    filename = data_file.name
+                
                 from sequana.iem import IEM
                 iem = IEM(filename)
                 try:
