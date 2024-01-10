@@ -9,7 +9,7 @@ from sequana.iem import IEM
 
 st.set_page_config(
     page_title="Sample Sheet Validator",
-    page_icon="imgs/logo_2566x256.png",
+    page_icon="imgs/logo_256x256.png",
     layout="wide",
     #initial_sidebar_state="expanded",
     #menu_items={
@@ -44,8 +44,11 @@ def main():
                 with open(filename, "w") as fout:
                     fout.write(data)
                 iem = IEM(filename)
+
+                
                 try:
                     st.write(f"This sample sheet contains {len(iem.df)} samples")
+                    st.write(iem.df)
                     iem.validate()
                 except SystemExit as err:
                     st.write(err)
