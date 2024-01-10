@@ -3,6 +3,7 @@ import os
 
 import streamlit as st
 import streamlit.components.v1 as stc
+from streamlit_extras.app_logo import add_logo
 
 import pandas as pd # installed with sequana
 from sequana.iem import IEM
@@ -25,7 +26,7 @@ st.set_page_config(
 )
 
 def main():
-    st.sidebar.image("imgs/logo_256x256.png", use_column_width=True)
+    add_logo("imgs/logo_256x256.png", height="150")
     st.title("Sample Sheet validator")
 
     menu = ["Sample Sheet Validation (Illumina)","About"]
