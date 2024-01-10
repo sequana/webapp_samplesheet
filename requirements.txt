@@ -1,1 +1,2 @@
 sequana
+streamlit-extras
