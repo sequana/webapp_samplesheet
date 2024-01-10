@@ -57,6 +57,12 @@ def main():
         st.info("Thomas Cokelaer")
         st.text("Institut Pasteur, Paris, France")
 
+try:
+    from state import count_sessions
+    c = count_sessions()
+    st.write(c)
+except Exception as err:
+    print(err)
 
 
 if __name__ == '__main__':
