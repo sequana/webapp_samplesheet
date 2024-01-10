@@ -1,9 +1,28 @@
+from pathlib import Path
+import os
+
 import streamlit as st
 import streamlit.components.v1 as stc
-import pandas as pd
-from PIL import Image 
-import os
-from pathlib import Path
+
+import pandas as pd # installed with sequana
+from sequana.iem import IEM
+
+st.set_page_config(
+    page_title="Sample Sheet Validator",
+    #page_icon="imgs/logo_sequana.png",
+    layout="wide",
+    #initial_sidebar_state="expanded",
+    #menu_items={
+    #    "Get help": "https://github.com/",
+    #    "Report a bug": "https://github.com/",
+    #    "About": """
+    #        ## Streamly Streamlit Assistant
+    #        
+    #        **GitHub**: https://github.com/sequana/st_sample_sheet
+    #
+    #    """
+    }
+)
 
 def main():
     st.title("Sample Sheet validator")
@@ -19,13 +38,15 @@ def main():
                 file_details = {"Filename":data_file.name,"FileType":data_file.type,"FileSize":data_file.size}
                 st.write(file_details)
 
-                if os.path.exists(data_file.name) is False:
-                    filename = f"/mount/src/st_sample_sheet/{data_file.name}"
-                else:
-                    filename = data_file.name
+                # read to save locally
+                data = data_file.read().decode()
+                filename = "temp.csv"
+                with open(filename, "w") as fout:
+                    fout.write(data)
+                    
                 
-                from sequana.iem import IEM
                 iem = IEM(filename)
+                
                 try:
                     st.write(f"This sample sheet contains {len(iem.df)} samples")
                     iem.validate()
