@@ -1,1 +1,2 @@
 sequana>=0.16.6
+streamlit_option_menu
