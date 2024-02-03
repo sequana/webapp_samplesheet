@@ -1,1 +1,1 @@
-sequana
+sequana>=0.16.6
