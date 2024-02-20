@@ -6,17 +6,39 @@ from pathlib import Path
 import pandas as pd  # installed with sequana
 import requests
 import streamlit as st
-from streamlit_option_menu import option_menu
 from sequana.iem import IEM
 from sequana.rnadiff import RNADesign
-
+from streamlit_option_menu import option_menu
 
 st.set_page_config(
     page_title="Sample Sheet and Design Validator",
     page_icon="imgs/logo_256x256.png",
     layout="wide",
-    menu_items={"Report a bug": "https://github.com/sequana/st_sample_sheet/issues/new/choose"},
+    menu_items={"Report a bug": "https://github.com/sequana/webapp_samplesheet/issues/new/choose"},
 )
+
+
+def print_checks(checks):
+
+    msgs = defaultdict(list)
+    emoji = {"Error": ":x:", "Success": ":white_check_mark:", "Warning": ":warning:"}
+
+    bar = st.progress(0)
+    for i, check in enumerate(checks):
+        status = check["status"]
+        msg = check["msg"]
+
+        msgs[status].append(f"{status} {emoji[status]}. {msg}\n\n")
+        bar.progress((i + 1) / len(checks))
+        time.sleep(0.2)
+
+    for error in msgs["Error"]:
+        st.error(error)
+    for warning in msgs["Warning"]:
+        st.warning(warning)
+    for success in msgs["Success"]:
+        st.success(success)
+    return msgs
 
 
 def main():
@@ -29,7 +51,7 @@ def main():
     # 1. as sidebar menu
     with st.sidebar:
         choice = option_menu(
-            "Main Menu", menu, icons=["gear", "gear", "cloud-upload", ""], menu_icon="cast", default_index=1
+            "Main Menu", menu, icons=["gear", "gear", "cloud-upload", ""], menu_icon="cast", default_index=0
         )
 
     if choice == "Sample Sheet Validation (Illumina)":
@@ -70,29 +92,10 @@ def main():
                 # =============================================================== validation
                 st.subheader(" Details about the checks", divider="blue")
                 checks = iem.checker()
-
-                msgs = defaultdict(list)
-                emoji = {"Error": ":x:", "Success": ":white_check_mark:", "Warning": ":warning:"}
-
-                bar = st.progress(0)
-                for i, check in enumerate(checks):
-                    status = check["status"]
-                    msg = check["msg"]
-
-                    msgs[status].append(f"{status} {emoji[status]}. {msg}\n\n")
-                    bar.progress((i + 1) / len(checks))
-                    time.sleep(0.2)
-
-                for error in msgs["Error"]:
-                    st.error(error)
-                for warning in msgs["Warning"]:
-                    st.warning(warning)
-                for success in msgs["Success"]:
-                    st.success(success)
+                msgs = print_checks(checks)
 
                 # =============================================================== original file
                 st.subheader("Original file", divider="blue")
-
                 st.code(open(filename).read())
 
                 # =============================================================== corrected file
@@ -110,7 +113,6 @@ def main():
                         file_name="sample.csv",
                         mime="text/csv",
                     )
-                    # st.code(open(filename).read())
 
                 # =============================================================== data section
                 st.subheader("Data section", divider="blue")
@@ -119,14 +121,14 @@ def main():
                 st.write(df)
     elif choice == "RNAdiff Design File (Sequana)":
         st.markdown(
-            "Please select a validator from the left hand side menu (default is Illumina Sample Sheet). Valid examples are available [here](https://github.com/sequana/st_sample_sheet/)"
+            "Please select a validator from the left hand side menu (default is Illumina Sample Sheet). Valid examples are available [here](https://github.com/sequana/webapp_samplesheet/)"
         )
         st.subheader("Sequana RNAdiff design file", divider="blue")
 
         data_file = st.file_uploader(
             (
                 "Drop a RNAdiff design file here below and press the **Process** button. "
-                "Valid examples are available [here](https://github.com/sequana/st_sample_sheet/)"
+                "Valid examples are available [here](https://github.com/sequana/webapp_samplesheet/)"
             ),
             type=["csv", "txt"],
         )
@@ -140,22 +142,68 @@ def main():
                 filename = "temp.csv"
                 with open(filename, "w") as fout:
                     fout.write(data)
+
                 try:
                     design = RNADesign(filename)
-                    st.write("ok")
+                    design.validate()
                 except SystemExit as err:
                     st.header("Validation Results", divider="blue")
                     msg = "Error(s) found. :sob: See message below from Sequana"
                     st.error(msg)
                     st.error(err)
+                else:
+                    st.header("Validation Results", divider="blue")
+                    # emoji within div do not seem to work
+                    msg = ":champagne: Sample Sheet looks correct. :champagne:"
+                    st.success(msg)
+
+                # =============================================================== validation
+                st.subheader(" Details about the checks", divider="blue")
+                checks = design.checker()
+                msgs = print_checks(checks)
+
+                st.divider()
+                st.write(design.df)
+
     elif choice == "Examples":
-        st.subheader("Illumina")
-        url = "https://raw.githubusercontent.com/sequana/st_sample_sheet/main/sample_sheet.csv"
+        st.subheader("1 - Illumina")
+        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
         st.code(data, language="bash")
 
-        st.subheader("RNAdiff design file")
+        st.subheader("2 - RNAdiff design file")
+
+        st.write(
+            "The following correct design file contains 2 columns named label and condition (optional extra column for batch effect may also be included."
+        )
+        st.code(
+            """
+label,condition
+WT_S1, WT
+WT_S2, WT
+WT_S3, WT
+Mutation1_S4, Mut
+Mutation2_S5, Mut
+Mutation3_S6, Mut
+""",
+            language="bash",
+        )
+
+        st.write(
+            "The following example is not correct. The column is wrongly spelled <b>conditio</b> (missing n). Besides, there is only one condition (WT)."
+        )
+        st.code(
+            """
+label,condition
+WT_S1, WT
+WT_S2, WT
+WT_S3, WT
+Mutation1_S4, WT
+Mutation2_S5, WT
+Mutation3_S6, WT
+"""
+        )
 
     else:
         st.subheader("About")
