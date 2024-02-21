@@ -1,4 +1,5 @@
 import os
+import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -70,11 +71,11 @@ def main():
                 # st.write(file_details)
 
                 # read to save locally
-                data = data_file.read().decode()
-                filename = "temp.csv"
-                with open(filename, "w") as fout:
-                    fout.write(data)
-                iem = IEM(filename)
+                samplesheet = data_file.read().decode()
+                with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
+                    fout.write(samplesheet)
+                    fout.close()
+                    iem = IEM(fout.name)
 
                 try:
                     # st.write(f"This sample sheet contains {len(iem.df)} samples")
@@ -96,7 +97,7 @@ def main():
 
                 # =============================================================== original file
                 st.subheader("Original file", divider="blue")
-                st.code(open(filename).read())
+                st.code(samplesheet)
 
                 # =============================================================== corrected file
                 if len(msgs["Error"]):
@@ -104,19 +105,23 @@ def main():
                     st.caption(
                         "Quick fix here below gets rid of extra trailing ; . Other types of errors are difficult to correct automatically. You will need to correct the file manually. We strongly recommend you to use IEM software (from Illumina) for that. Otherwise, to quickly edit the file, do not use Excel because the sample sheet is not a CSV file despite the fact that the extension is usually .csv   "
                     )
+                    with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
+                        iem.quick_fix(fout.name)
+                        fout.close()
+                        with open(fout.name, "r") as fin:
 
-                    iem.quick_fix("test.txt")
-                    data = open("test.txt", "r").read()
-                    st.download_button(
-                        label="Download data as CSV",
-                        data=data,
-                        file_name="sample.csv",
-                        mime="text/csv",
-                    )
+                            st.download_button(
+                                label="Download data as CSV",
+                                data=fin.read(),
+                                file_name="sample.csv",
+                                mime="text/csv",
+                            )
 
                 # =============================================================== data section
                 st.subheader("Data section", divider="blue")
-                st.caption("For convenience, we show the data section here below as a CSV file. ")
+                st.caption(
+                    "For convenience, we show the data section here below as a CSV file. It should be coherent (e.g. index on a single column"
+                )
                 df = iem.df.copy()
                 st.write(df)
     elif choice == "RNAdiff Design File (Sequana)":
