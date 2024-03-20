@@ -9,11 +9,15 @@ Running demo is here: https://check-my-sample-sheet.streamlit.app/
 
 # General Information
 
-Note that there is a V2 version of the Illumina Sample Sheet to be used with BCL convert. In this application we focus on the V1 (to be used with bcl2fastq). 
-Some differences are :
+If you want to contribute, the core of the application is within the Sequana project on github.com/sequana/sequana/ ,
+more specifically in the iem.py module.
 
-- section **[Data]** is **[BCLConvert_Data]**  [doc](https://support-docs.illumina.com/APP/AppBCLConvert_v1_3/Content/APP/DataSection_swBCL_swBS_appBCL.htm)
+The sanity checks implemented are based on experience and the bcl2fastq documentation. 
 
-According to the bcl2fastq documentation, for project and sample names, the space is not allowed. These characters are not allowed  either: ? ( ) [ ] / \ = + < > : ; " ' , * ^ | & .
+Note that in project and sample names, spaces are not allowed. These characters are not allowed  either: ? ( ) [ ] / \ = + < > : ; " ' , * ^ | & .
 
-v4.0 of bclconvert: https://support-docs.illumina.com/SW/BCL_Convert_v4.0/Content/SW/BCLConvert/BCLConvert.htm
+Note also that there is a V2 version of the Illumina Sample Sheet to be used with BCL convert utility. In this application we focus on the V1 (to be used with bcl2fastq).
+
+
+More information here [doc](https://support-docs.illumina.com/APP/AppBCLConvert_v1_3/Content/APP/DataSection_swBCL_swBS_appBCL.htm)
+and for v4.0 of bclconvert: https://support-docs.illumina.com/SW/BCL_Convert_v4.0/Content/SW/BCLConvert/BCLConvert.htm

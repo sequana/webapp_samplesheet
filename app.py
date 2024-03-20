@@ -175,12 +175,21 @@ def main():
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
+        st.write(
+            """Here below is a simple Illumina Sample Sheet. We can see sections in square brackets.
+There are 4 of them. The [Header], [Reads], and [Settings] are optional (here [Settings] is missing.
+The  [Data] section is compulsary. The [Data] section should be a valid comma separated column section."""
+        )
         st.code(data, language="bash")
 
         st.subheader("2 - RNAdiff design file")
 
-        st.write(
-            "The following correct design file contains 2 columns named label and condition (optional extra column for batch effect may also be included."
+        st.markdown(
+            "The RNAdiff design file is a pure CSV file. It must contains a header with at least 2 columns named"
+            "**label** and **condition** (optional extra column for batch effect may also be included)."
+            "This design file is used by the **sequana rnadiff** sub command to perform differential RNA-seq analysis. "
+            "The label must be unique and condition must have at least 2 replicates to fulfill DESeq2 requirements. "
+            "You also must have at least 2 condtions"
         )
         st.code(
             """
