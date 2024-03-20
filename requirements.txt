@@ -1,2 +1,2 @@
-sequana>=0.16.8
+sequana>=0.16.11
 streamlit_option_menu
