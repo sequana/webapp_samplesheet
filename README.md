@@ -21,3 +21,12 @@ Note also that there is a V2 version of the Illumina Sample Sheet to be used wit
 
 More information here [doc](https://support-docs.illumina.com/APP/AppBCLConvert_v1_3/Content/APP/DataSection_swBCL_swBS_appBCL.htm)
 and for v4.0 of bclconvert: https://support-docs.illumina.com/SW/BCL_Convert_v4.0/Content/SW/BCLConvert/BCLConvert.htm
+
+
+# Local instance
+
+    git clone https://github.com/sequana/webapp_samplesheet check_my_sample_sheet
+    cd check_my_sample_sheet
+    streamlit run app.py
+
+

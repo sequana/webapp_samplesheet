@@ -8,11 +8,10 @@ import pandas as pd  # installed with sequana
 import requests
 import streamlit as st
 from sequana.iem import IEM
-from sequana.rnadiff import RNADesign
 from streamlit_option_menu import option_menu
 
 st.set_page_config(
-    page_title="Sample Sheet and Design Validator",
+    page_title="Illumina Sample Sheet Validator",
     page_icon="imgs/logo_256x256.png",
     layout="wide",
     menu_items={"Report a bug": "https://github.com/sequana/webapp_samplesheet/issues/new/choose"},
@@ -22,7 +21,10 @@ st.set_page_config(
 def print_checks(checks):
 
     msgs = defaultdict(list)
-    emoji = {"Error": ":x:", "Success": ":white_check_mark:", "Warning": ":warning:"}
+    emoji = {"Error": ":x:", 
+            "Succcess": ":white_check_mark:", # a temporary hack
+            "Success": ":white_check_mark:", 
+            "Warning": ":warning:"}
 
     bar = st.progress(0)
     for i, check in enumerate(checks):
@@ -47,7 +49,7 @@ def main():
     st.sidebar.image("imgs/logo_256x256.png")
     st.title("Sample Sheet and Design Validator")
 
-    menu = ["Sample Sheet Validation (Illumina)", "RNAdiff Design File (Sequana)", "Examples", "About"]
+    menu = ["Sample Sheet Validation (Illumina)", "Examples", "About"]
 
     # 1. as sidebar menu
     with st.sidebar:
@@ -124,52 +126,6 @@ def main():
                 )
                 df = iem.df.copy()
                 st.write(df)
-    elif choice == "RNAdiff Design File (Sequana)":
-        st.markdown(
-            "Please select a validator from the left hand side menu (default is Illumina Sample Sheet). Valid examples are available [here](https://github.com/sequana/webapp_samplesheet/)"
-        )
-        st.subheader("Sequana RNAdiff design file", divider="blue")
-
-        data_file = st.file_uploader(
-            (
-                "Drop a RNAdiff design file here below and press the **Process** button. "
-                "Valid examples are available [here](https://github.com/sequana/webapp_samplesheet/)"
-            ),
-            type=["csv", "txt"],
-        )
-
-        if st.button("Process"):
-            if data_file is not None:
-                file_details = {"Filename": data_file.name, "FileType": data_file.type, "FileSize": data_file.size}
-
-                # read to save locally
-                data = data_file.read().decode()
-                filename = "temp.csv"
-                with open(filename, "w") as fout:
-                    fout.write(data)
-
-                try:
-                    design = RNADesign(filename)
-                    design.validate()
-                except SystemExit as err:
-                    st.header("Validation Results", divider="blue")
-                    msg = "Error(s) found. :sob: See message below from Sequana"
-                    st.error(msg)
-                    st.error(err)
-                else:
-                    st.header("Validation Results", divider="blue")
-                    # emoji within div do not seem to work
-                    msg = ":champagne: Sample Sheet looks correct. :champagne:"
-                    st.success(msg)
-
-                # =============================================================== validation
-                st.subheader(" Details about the checks", divider="blue")
-                checks = design.checker()
-                msgs = print_checks(checks)
-
-                st.divider()
-                st.write(design.df)
-
     elif choice == "Examples":
         st.subheader("1 - Illumina")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
@@ -182,42 +138,6 @@ The  [Data] section is compulsary. The [Data] section should be a valid comma se
         )
         st.code(data, language="bash")
 
-        st.subheader("2 - RNAdiff design file")
-
-        st.markdown(
-            "The RNAdiff design file is a pure CSV file. It must contains a header with at least 2 columns named"
-            "**label** and **condition** (optional extra column for batch effect may also be included)."
-            "This design file is used by the **sequana rnadiff** sub command to perform differential RNA-seq analysis. "
-            "The label must be unique and condition must have at least 2 replicates to fulfill DESeq2 requirements. "
-            "You also must have at least 2 condtions"
-        )
-        st.code(
-            """
-label,condition
-WT_S1, WT
-WT_S2, WT
-WT_S3, WT
-Mutation1_S4, Mut
-Mutation2_S5, Mut
-Mutation3_S6, Mut
-""",
-            language="bash",
-        )
-
-        st.write(
-            "The following example is not correct. The column is wrongly spelled <b>conditio</b> (missing n). Besides, there is only one condition (WT)."
-        )
-        st.code(
-            """
-label,condition
-WT_S1, WT
-WT_S2, WT
-WT_S3, WT
-Mutation1_S4, WT
-Mutation2_S5, WT
-Mutation3_S6, WT
-"""
-        )
 
     else:
         st.subheader("About")
@@ -225,6 +145,7 @@ Mutation3_S6, WT
             "This application is part of the [Sequana Project](https://github.com/sequana), which is dedicated to NGS analysis. Please see the [online documentation](https://sequana.readthdocs.io) as well as https://sequana.github.io for more information; the code used in this application is based on the [IEM module](https://github.com/sequana/sequana) of the Sequana Python library"
         )
         st.info("Application Author: Thomas Cokelaer")
+        #st.info("Application Reviewer/Contributors: Laure Lemée, Etienne Kornobis, Rania Ouazahrou")
 
 
 if __name__ == "__main__":
