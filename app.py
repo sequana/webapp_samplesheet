@@ -68,64 +68,24 @@ def main():
         )
 
         if st.button("Process"):
-            if data_file is not None:
-                file_details = {"Filename": data_file.name, "FileType": data_file.type, "FileSize": data_file.size}
-                # st.write(file_details)
 
-                # read to save locally
-                samplesheet = data_file.read().decode()
-                with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
-                    fout.write(samplesheet)
-                    fout.close()
-                    iem = IEM(fout.name)
+            samplesheet = data_file.read().decode()
+            try:
+                process_sample_sheet(data_file, samplesheet)
+            except Exception as err:
+                import urllib.parse
+                base_url = f"https://github.com/sequana/webapp_samplesheet/issues/new"
 
-                try:
-                    # st.write(f"This sample sheet contains {len(iem.df)} samples")
-                    iem.validate()
-                except SystemExit as err:
-                    st.header("Validation Results", divider="blue")
-                    msg = "Error(s) found. :sob: See message below from Sequana"
-                    st.error(msg)
-                    st.info(err)
-                else:
-                    st.header("Validation Results", divider="blue")
-                    # emoji within div do not seem to work
-                    msg = ":champagne: Sample Sheet looks correct. :champagne:"
-                    st.success(msg)
-                # =============================================================== validation
-                st.subheader(" Details about the checks", divider="blue")
-                checks = iem.checker()
-                msgs = print_checks(checks)
+                samplesheet = "\n".join(["    "+x for x in samplesheet.split("\n")])
+                params = {
+                    'title': "Automatic error from the check-my-sample-sheet website",
+                    'body': f"Dear developer(s),\n\nI encountered an expected error using the following samplesheet \n\n{samplesheet}\n\n Here is the full error message\n\n     {err}. Please tell us what you think might be the reason for the error"
+                }
+                url = f"{base_url}?{urllib.parse.urlencode(params)}"
+                st.markdown(f'<div style="background-color: #ffcccc; padding: 10px; border-radius: 5px;"> Sorry but and unknown error occurred. Please create an issue <a href="{url}">here</a> to report it. A page will open; you will need to clik on the "Submit new issue" button </div>', unsafe_allow_html=True)
 
-                # =============================================================== original file
-                st.subheader("Original file", divider="blue")
-                st.code(samplesheet)
+                raise Exception(err)
 
-                # =============================================================== corrected file
-                if len(msgs["Error"]):
-                    st.subheader("Corrected file", divider="blue")
-                    st.caption(
-                        "Quick fix here below gets rid of extra trailing ; . Other types of errors are difficult to correct automatically. You will need to correct the file manually. We strongly recommend you to use IEM software (from Illumina) for that. Otherwise, to quickly edit the file, do not use Excel because the sample sheet is not a CSV file despite the fact that the extension is usually .csv   "
-                    )
-                    with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
-                        iem.quick_fix(fout.name)
-                        fout.close()
-                        with open(fout.name, "r") as fin:
-
-                            st.download_button(
-                                label="Download data as CSV",
-                                data=fin.read(),
-                                file_name="sample.csv",
-                                mime="text/csv",
-                            )
-
-                # =============================================================== data section
-                st.subheader("Data section", divider="blue")
-                st.caption(
-                    "For convenience, we show the data section here below as a CSV file. It should be coherent (e.g. index on a single column"
-                )
-                df = iem.df.copy()
-                st.write(df)
     elif choice == "Examples":
         st.subheader("1 - Illumina")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
@@ -146,6 +106,67 @@ The  [Data] section is compulsary. The [Data] section should be a valid comma se
         )
         st.info("Application Author: Thomas Cokelaer")
         #st.info("Application Reviewer/Contributors: Laure Lemée, Etienne Kornobis, Rania Ouazahrou")
+
+
+def process_sample_sheet(data_file, samplesheet):
+    if data_file is not None:
+        file_details = {"Filename": data_file.name, "FileType": data_file.type, "FileSize": data_file.size}
+
+        # read to save locally
+        #samplesheet = data_file.read().decode()
+
+        with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
+            fout.write(samplesheet)
+            fout.close()
+            iem = IEM(fout.name)
+
+        try:
+            # st.write(f"This sample sheet contains {len(iem.df)} samples")
+            iem.validate()
+        except SystemExit as err:
+            st.header("Validation Results", divider="blue")
+            msg = "Error(s) found. :sob: See message below from Sequana"
+            st.error(msg)
+            st.info(err)
+        else:
+            st.header("Validation Results", divider="blue")
+            # emoji within div do not seem to work
+            msg = ":champagne: Sample Sheet looks correct. :champagne:"
+            st.success(msg)
+        # =============================================================== validation
+        st.subheader(" Details about the checks", divider="blue")
+        checks = iem.checker()
+        msgs = print_checks(checks)
+
+        # =============================================================== original file
+        st.subheader("Original file", divider="blue")
+        st.code(samplesheet)
+
+        # =============================================================== corrected file
+        if len(msgs["Error"]):
+            st.subheader("Corrected file", divider="blue")
+            st.caption(
+                "Quick fix here below gets rid of extra trailing ; . Other types of errors are difficult to correct automatically. You will need to correct the file manually. We strongly recommend you to use IEM software (from Illumina) for that. Otherwise, to quickly edit the file, do not use Excel because the sample sheet is not a CSV file despite the fact that the extension is usually .csv   "
+                )
+            with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
+                iem.quick_fix(fout.name)
+                fout.close()
+                with open(fout.name, "r") as fin:
+
+                    st.download_button(
+                        label="Download data as CSV",
+                        data=fin.read(),
+                        file_name="sample.csv",
+                        mime="text/csv",
+                    )
+
+        # =============================================================== data section
+        st.subheader("Data section", divider="blue")
+        st.caption(
+            "For convenience, we show the data section here below as a CSV file. It should be coherent (e.g. index on a single column"
+        )
+        df = iem.df.copy()
+        st.write(df)
 
 
 if __name__ == "__main__":
