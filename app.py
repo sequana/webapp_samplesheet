@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd  # installed with sequana
 import requests
 import streamlit as st
-from sequana.iem import IEM
+from sequana.iem import SampleSheet
 from streamlit_option_menu import option_menu
 
 st.set_page_config(
@@ -20,21 +20,63 @@ st.set_page_config(
 
 def print_checks(checks):
 
+    # func to update colorbar
+    def colored_bar(success, warning, error):
+        return f"""
+        <div style="display: flex; width: 100%; height: 30px; border: 1px solid black;">
+            <div style="width: {success}%; background-color: green;"></div>
+            <div style="width: {warning}%; background-color: yellow;"></div>
+            <div style="width: {error}%; background-color: red;"></div>
+        </div>
+        """
+
     msgs = defaultdict(list)
     emoji = {"Error": ":x:", 
             "Succcess": ":white_check_mark:", # a temporary hack
             "Success": ":white_check_mark:", 
             "Warning": ":warning:"}
 
-    bar = st.progress(0)
+
+    # Placeholder for the colored bar
+    bar_placeholder = st.empty()
+
+    counter = {"Error":0, "Warning":0, "Success":0}
+
     for i, check in enumerate(checks):
         status = check["status"]
         msg = check["msg"]
 
         msgs[status].append(f"{status} {emoji[status]}. {msg}\n\n")
-        bar.progress((i + 1) / len(checks))
-        time.sleep(0.2)
+        time.sleep(0.15)
 
+        counter[status] += 1
+
+        S = sum(counter.values())
+        success = counter['Success'] / S *100
+        warning = counter['Warning'] / S *100
+        error = counter['Error'] / S *100
+ 
+        bar_placeholder.markdown(colored_bar(success, warning, error), unsafe_allow_html=True)
+
+    # finally add the legend
+    st.markdown(f"""
+        <div style="display: flex; justify-content: space-between; width: 50%;">
+             <div style="display: flex; align-items: center;">
+                 <div style="width: 20px; height: 20px; background-color: green; margin-right: 5px;"></div>
+                 <span>Success ({counter['Success']})</span>
+             </div>
+             <div style="display: flex; align-items: center;">
+                 <div style="width: 20px; height: 20px; background-color: yellow; margin-right: 5px;"></div>
+                 <span>Warning ({counter['Warning']})</span>
+             </div>
+             <div style="display: flex; align-items: center;">
+                 <div style="width: 20px; height: 20px; background-color: red; margin-right: 5px;"></div>
+                 <span>Error ({counter['Error']})</span>
+             </div>
+         </div>
+         """, unsafe_allow_html=True)
+
+    # prints all message
     for error in msgs["Error"]:
         st.error(error)
     for warning in msgs["Warning"]:
@@ -79,7 +121,7 @@ def main():
                 samplesheet = "\n".join(["    "+x for x in samplesheet.split("\n")])
                 params = {
                     'title': "Automatic error from the check-my-sample-sheet website",
-                    'body': f"Dear developer(s),\n\nI encountered an expected error using the following samplesheet \n\n{samplesheet}\n\n Here is the full error message\n\n     {err}. Please tell us what you think might be the reason for the error"
+                    'body': f"Dear developer(s),\n\nI encountered an expected error using the following samplesheet \n\n{samplesheet}\n\n Here is the full error message\n\n     {err} \n\n Please tell us what you think might be the reason for the error"
                 }
                 url = f"{base_url}?{urllib.parse.urlencode(params)}"
                 st.markdown(f'<div style="background-color: #ffcccc; padding: 10px; border-radius: 5px;"> Sorry but and unknown error occurred. Please create an issue <a href="{url}">here</a> to report it. A page will open; you will need to clik on the "Submit new issue" button </div>', unsafe_allow_html=True)
@@ -87,14 +129,17 @@ def main():
                 raise Exception(err)
 
     elif choice == "Examples":
-        st.subheader("1 - Illumina")
+        st.subheader("1 - Illumina Minimalist Example")
+        st.subheader("1 - Illumina Single end Example")
+        st.subheader("1 - Illumina Paired end Example")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
         st.write(
             """Here below is a simple Illumina Sample Sheet. We can see sections in square brackets.
 There are 4 of them. The [Header], [Reads], and [Settings] are optional (here [Settings] is missing.
-The  [Data] section is compulsary. The [Data] section should be a valid comma separated column section."""
+The  [Data] section is compulsary. According to the Illumina specs, the [Data] is also optional. In such case, all
+called reads are stored as undetermined. Not very useful. We make the [Data] section mandatory."""
         )
         st.code(data, language="bash")
 
@@ -118,7 +163,7 @@ def process_sample_sheet(data_file, samplesheet):
         with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
             fout.write(samplesheet)
             fout.close()
-            iem = IEM(fout.name)
+            iem = SampleSheet(fout.name)
 
         try:
             # st.write(f"This sample sheet contains {len(iem.df)} samples")
@@ -136,6 +181,7 @@ def process_sample_sheet(data_file, samplesheet):
         # =============================================================== validation
         st.subheader(" Details about the checks", divider="blue")
         checks = iem.checker()
+
         msgs = print_checks(checks)
 
         # =============================================================== original file
@@ -167,6 +213,43 @@ def process_sample_sheet(data_file, samplesheet):
         )
         df = iem.df.copy()
         st.write(df)
+
+
+def get_colored_bar(checks):
+    def colored_bar(success, warning, error):
+        return f"""
+        <div style="display: flex; width: 100%; height: 30px;">
+            <div style="width: {success}%; background-color: green;"></div>
+            <div style="width: {warning}%; background-color: yellow;"></div>
+            <div style="width: {error}%; background-color: red;"></div>
+        </div>
+        """
+
+    # Proportions for success, warning, and error
+
+    # Ensure the proportions sum up to 100
+    st.markdown(colored_bar(success_percentage, warning_percentage, error_percentage), unsafe_allow_html=True)
+
+    # Add a legend
+    st.markdown("""
+        <div style="display: flex; justify-content: space-between; width: 50%;">
+            <div style="display: flex; align-items: center;">
+                <div style="width: 20px; height: 20px; background-color: green; margin-right: 5px;"></div>
+                <span>Success</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div style="width: 20px; height: 20px; background-color: yellow; margin-right: 5px;"></div>
+                <span>Warning</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div style="width: 20px; height: 20px; background-color: red; margin-right: 5px;"></div>
+                <span>Error</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+
 
 
 if __name__ == "__main__":
