@@ -138,7 +138,7 @@ def main():
 
     if choice == "Sample Sheet Validation (Illumina)":
         st.markdown(
-            "Please provide a Sample Sheet file to validate here below. Valid examples are available [here](https://github.com/sequana/st_sample_sheet/ and in the Example section.)"
+            "Please provide a Sample Sheet file to validate here below. See examples (here)[https://github.com/sequana/st_sample_sheet/] (and Example section.)"
         )
         st.subheader("Input SampleSheet file", divider="blue")
 
@@ -157,7 +157,7 @@ def main():
                 "Paste your code here and press the **Process** button", value=st.session_state.code, key="code_area"
             )
 
-        if st.button("Process"):
+        if st.button(":gear: Process :gear:"):
 
             try:
                 samplesheet = data_file.read().decode()
@@ -250,7 +250,6 @@ def process_sample_sheet(data_file, samplesheet):
     Returns:
     None
     """
-    st.write("header")
     if data_file is not None:
         file_details = {"Filename": data_file.name, "FileType": data_file.type, "FileSize": data_file.size}
     else:
