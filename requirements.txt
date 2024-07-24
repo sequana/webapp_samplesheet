@@ -1,2 +1,3 @@
 sequana==0.17.0
 streamlit_option_menu
+aiohttp
