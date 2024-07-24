@@ -20,7 +20,6 @@ import streamlit as st
 from sequana.iem import SampleSheet
 from streamlit_option_menu import option_menu
 
-
 st.set_page_config(
     page_title="Illumina Sample Sheet Validator",
     page_icon="imgs/logo_256x256.png",
@@ -29,6 +28,7 @@ st.set_page_config(
 )
 
 version = "1.0.0"
+
 
 def print_checks(checks):
     """
@@ -58,7 +58,8 @@ def print_checks(checks):
 
     def add_legend(success, warning, error):
         # finally add the legend
-        st.markdown(f"""
+        st.markdown(
+            f"""
             <div style="display: flex; justify-content: space-between; width: 50%;">
                  <div style="display: flex; align-items: center;">
                      <div style="width: 20px; height: 20px; background-color: green; margin-right: 5px;"></div>
@@ -73,21 +74,21 @@ def print_checks(checks):
                     <span>Error ({error})</span>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+            unsafe_allow_html=True,
+        )
 
     msgs = defaultdict(list)
-    emoji = {"Error": ":x:", 
-            "Success": ":white_check_mark:", 
-            "Warning": ":warning:"}
+    emoji = {"Error": ":x:", "Success": ":white_check_mark:", "Warning": ":warning:"}
 
     # Placeholder for the colored bar
     bar_placeholder = st.empty()
-    bar_placeholder.markdown(colored_bar(0,0,0,0), unsafe_allow_html=True)
-    #add_legend(0,0,0)
+    bar_placeholder.markdown(colored_bar(0, 0, 0, 0), unsafe_allow_html=True)
+    # add_legend(0,0,0)
 
-    counter = {"Error":0, "Warning":0, "Success":0}
+    counter = {"Error": 0, "Warning": 0, "Success": 0}
 
-    N = len(checks) # Number of checks
+    N = len(checks)  # Number of checks
     for i, check in enumerate(checks):
         status = check["status"]
         msg = check["msg"]
@@ -98,18 +99,17 @@ def print_checks(checks):
         counter[status] += 1
 
         S = sum(counter.values())
-        success = counter['Success'] / S *100
-        warning = counter['Warning'] / S *100
-        error = counter['Error'] / S *100
- 
-        completed = min(round(100*(S/float(N))), 100)
+        success = counter["Success"] / S * 100
+        warning = counter["Warning"] / S * 100
+        error = counter["Error"] / S * 100
+
+        completed = min(round(100 * (S / float(N))), 100)
         bar_placeholder.markdown(colored_bar(success, warning, error, completed), unsafe_allow_html=True)
 
     # finally add the legend
     _, col2, _ = st.columns([1, 4, 1])
     with col2:
-        add_legend(counter['Success'], counter['Warning'], counter['Error'])    
-
+        add_legend(counter["Success"], counter["Warning"], counter["Error"])
 
     # prints all message
     for error in msgs["Error"]:
@@ -125,8 +125,8 @@ def main():
     st.sidebar.write("Provided by the [Sequana teams](https://github.com/sequana/sequana)")
     st.sidebar.image("imgs/logo_256x256.png")
     st.title(f"Sample Sheet and Design Validator (v{version})")
-    if 'code' not in st.session_state:
-        st.session_state.code = ""  
+    if "code" not in st.session_state:
+        st.session_state.code = ""
 
     menu = ["Sample Sheet Validation (Illumina)", "Examples", "About"]
 
@@ -142,57 +142,63 @@ def main():
         )
         st.subheader("Input SampleSheet file", divider="blue")
 
-
         # create a 3-column layout
         col1, col2, col3 = st.columns([4, 1, 4])
         with col1:
             data_file = st.file_uploader(
                 "Drop a sample sheet here below and press the **Process** button. ", type=["csv", "txt"]
             )
-        with col2: 
+        with col2:
             # Centered "OR" text
             st.markdown("<div style='text-align: center;'><br><br>OR</div>", unsafe_allow_html=True)
 
         with col3:
-            code = st.text_area("Paste your code here and press the **Process** button", value=st.session_state.code, key="code_area")
-
+            code = st.text_area(
+                "Paste your code here and press the **Process** button", value=st.session_state.code, key="code_area"
+            )
 
         if st.button("Process"):
 
             try:
                 samplesheet = data_file.read().decode()
-                #st.experimental_rerun()
+                # st.experimental_rerun()
             except:
                 samplesheet = code
                 data_file = None
-
 
             try:
                 process_sample_sheet(data_file, samplesheet)
             except Exception as err:
                 import urllib.parse
+
                 base_url = f"https://github.com/sequana/webapp_samplesheet/issues/new"
 
-                samplesheet = "\n".join(["    "+x for x in samplesheet.split("\n")])
+                samplesheet = "\n".join(["    " + x for x in samplesheet.split("\n")])
                 params = {
-                    'title': "Automatic error from the check-my-sample-sheet website",
-                    'body': f"Dear developer(s),\n\nI encountered an expected error using the following samplesheet \n\n{samplesheet}\n\n Here is the full error message\n\n     {err} \n\n Please tell us what you think might be the reason for the error"
+                    "title": "Automatic error from the check-my-sample-sheet website",
+                    "body": f"Dear developer(s),\n\nI encountered an expected error using the following samplesheet \n\n{samplesheet}\n\n Here is the full error message\n\n     {err} \n\n Please tell us what you think might be the reason for the error",
                 }
                 url = f"{base_url}?{urllib.parse.urlencode(params)}"
-                st.markdown(f'<div style="background-color: #ffcccc; padding: 10px; border-radius: 5px;"> Sorry but and unknown error occurred. Please create an issue <a href="{url}">here</a> to report it. A page will open; you will need to clik on the "Submit new issue" button </div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div style="background-color: #ffcccc; padding: 10px; border-radius: 5px;"> Sorry but and unknown error occurred. Please create an issue <a href="{url}">here</a> to report it. A page will open; you will need to clik on the "Submit new issue" button </div>',
+                    unsafe_allow_html=True,
+                )
 
                 raise Exception(err)
 
     elif choice == "Examples":
         st.write("Here are some valid sample sheets examples.")
         st.subheader("1 - Illumina Minimalist Example")
-        st.write("""In this example, we simplify the sample sheet to keep only the [DATA] section and mandatory columns(index and Sample_ID). 
-                 Note that the 'Sample_ID' is not mandatory with bcl2fastq but we made it mandatory in this application (design choice)""")
-        st.code("""[Data]
+        st.write(
+            """In this example, we simplify the sample sheet to keep only the [DATA] section and mandatory columns(index and Sample_ID).
+                 Note that the 'Sample_ID' is not mandatory with bcl2fastq but we made it mandatory in this application (design choice)"""
+        )
+        st.code(
+            """[Data]
 Sample_ID,index
 ID1,TGACCA
-ID2,CATTTT""")
-
+ID2,CATTTT"""
+        )
 
         st.subheader("2 - Illumina With two indices")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
@@ -220,13 +226,13 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
     else:
         st.subheader("About")
         st.markdown(
-            "This application is part of the [Sequana Project](https://github.com/sequana), which is dedicated to NGS analysis. " 
+            "This application is part of the [Sequana Project](https://github.com/sequana), which is dedicated to NGS analysis. "
             "Please see the [online documentation](https://sequana.readthdocs.io) as well as https://sequana.github.io for more information."
             "The code used in this application is based on the [IEM module](https://github.com/sequana/sequana) of the Sequana Python library."
             "It was created based on the bcl2fastq documentation v2.20 and should users to demultiplex their data properly."
         )
         st.info("Application Author: Thomas Cokelaer")
-        #st.info("Application Reviewer/Contributors: Laure Lemée, Etienne Kornobis, Rania Ouazahrou")
+        # st.info("Application Reviewer/Contributors: Laure Lemée, Etienne Kornobis, Rania Ouazahrou")
 
 
 def process_sample_sheet(data_file, samplesheet):
@@ -244,17 +250,16 @@ def process_sample_sheet(data_file, samplesheet):
     Returns:
     None
     """
-    st.write('header')
+    st.write("header")
     if data_file is not None:
         file_details = {"Filename": data_file.name, "FileType": data_file.type, "FileSize": data_file.size}
     else:
         pass
 
-    if 1==1:
-
+    if 1 == 1:
 
         # read to save locally
-        #samplesheet = data_file.read().decode()
+        # samplesheet = data_file.read().decode()
 
         with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
             fout.write(samplesheet)
@@ -289,7 +294,7 @@ def process_sample_sheet(data_file, samplesheet):
             st.subheader("Corrected file", divider="blue")
             st.caption(
                 "Quick fix here below gets rid of extra trailing ; . Other types of errors are difficult to correct automatically. You will need to correct the file manually. We strongly recommend you to use IEM software (from Illumina) for that. Otherwise, to quickly edit the file, do not use Excel because the sample sheet is not a CSV file despite the fact that the extension is usually .csv   "
-                )
+            )
             with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
                 iem.quick_fix(fout.name)
                 fout.close()
@@ -309,8 +314,6 @@ def process_sample_sheet(data_file, samplesheet):
         )
         df = iem.df.copy()
         st.write(df)
-
-
 
 
 if __name__ == "__main__":
