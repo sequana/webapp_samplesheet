@@ -1,6 +1,6 @@
 # Check My Sample Sheet
 
-This is a streamlit application that uses Sequana (github.com/sequana/sequana) modules to check Sample Sheet from Illumina sequencers.
+This is a streamlit application that uses Sequana (github.com/sequana/sequana) **iem** modules to check Sample Sheet from Illumina sequencers.
 
 Running demo is here: https://check-my-sample-sheet.streamlit.app/
 
@@ -9,12 +9,11 @@ Running demo is here: https://check-my-sample-sheet.streamlit.app/
 
 # General Information
 
-If you want to contribute, the core of the application is within the Sequana project on github.com/sequana/sequana/ ,
-more specifically in the iem.py module.
+If you want to contribute to this web application, please provide PR here. Note, however, that the core of the application is within the Sequana project on https://github.com/sequana/sequana/, more specifically in the iem.py module.
 
 The sanity checks implemented are based on experience and the bcl2fastq documentation. 
 
-Note that in project and sample names, spaces are not allowed. These characters are not allowed  either: ? ( ) [ ] / \ = + < > : ; " ' , * ^ | & .
+Note that in Sample_ID, Sample_Project and Sample_Name columns, spaces are not allowed. These characters are not allowed  either: ? ( ) [ ] / \ = + < > : ; " ' , * ^ | & . Only alphanumeric characters are allowed and the - and _ characters.
 
 Note also that there is a V2 version of the Illumina Sample Sheet to be used with BCL convert utility. In this application we focus on the V1 (to be used with bcl2fastq).
 

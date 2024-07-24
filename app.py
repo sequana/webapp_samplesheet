@@ -1,14 +1,25 @@
-import os
+#
+#  This file is part of Sequana software
+#
+#  Copyright (c) 2023-2024 - Sequana Development Team
+#
+#  Distributed under the terms of the 3-clause BSD license.
+#  The full license is in the LICENSE file, distributed with this software.
+#
+#  website: https://github.com/sequana/webapp_samplesheet
+#  documentation: http://github.com/sequana/webapp_samplesheet/
+#
+##############################################################################
+
 import tempfile
 import time
 from collections import defaultdict
-from pathlib import Path
 
-import pandas as pd  # installed with sequana
 import requests
 import streamlit as st
 from sequana.iem import SampleSheet
 from streamlit_option_menu import option_menu
+
 
 st.set_page_config(
     page_title="Illumina Sample Sheet Validator",
@@ -17,31 +28,66 @@ st.set_page_config(
     menu_items={"Report a bug": "https://github.com/sequana/webapp_samplesheet/issues/new/choose"},
 )
 
+version = "1.0.0"
 
 def print_checks(checks):
+    """
+    This function processes a list of checks and displays them in a Streamlit application.
+    Each check is represented as a dictionary with 'status' and 'msg' keys. The function
+    updates a color-coded progress bar based on the number of errors, warnings, and successes.
+    It also prints the messages associated with each check in the appropriate Streamlit function
+    (st.error, st.warning, st.success).
+
+    Parameters:
+    checks (list): A list of dictionaries, where each dictionary represents a check.
+                   The dictionary should have 'status' and 'msg' keys.
+
+    Returns:
+    dict: A dictionary containing the messages associated with each status (Error, Warning, Success).
+    """
 
     # func to update colorbar
-    def colored_bar(success, warning, error):
+    def colored_bar(success, warning, error, completed=0):
         return f"""
-        <div style="display: flex; width: 100%; height: 30px; border: 1px solid black;">
+        <div style="display: flex; width: {completed}%; height: 30px; border: 1px solid black;">
             <div style="width: {success}%; background-color: green;"></div>
             <div style="width: {warning}%; background-color: yellow;"></div>
             <div style="width: {error}%; background-color: red;"></div>
         </div>
         """
 
+    def add_legend(success, warning, error):
+        # finally add the legend
+        st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; width: 50%;">
+                 <div style="display: flex; align-items: center;">
+                     <div style="width: 20px; height: 20px; background-color: green; margin-right: 5px;"></div>
+                    <span>Success ({success})</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                     <div style="width: 20px; height: 20px; background-color: yellow; margin-right: 5px;"></div>
+                    <span>Warning ({warning})</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 20px; height: 20px; background-color: red; margin-right: 5px;"></div>
+                    <span>Error ({error})</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
     msgs = defaultdict(list)
     emoji = {"Error": ":x:", 
-            "Succcess": ":white_check_mark:", # a temporary hack
             "Success": ":white_check_mark:", 
             "Warning": ":warning:"}
 
-
     # Placeholder for the colored bar
     bar_placeholder = st.empty()
+    bar_placeholder.markdown(colored_bar(0,0,0,0), unsafe_allow_html=True)
+    #add_legend(0,0,0)
 
     counter = {"Error":0, "Warning":0, "Success":0}
 
+    N = len(checks) # Number of checks
     for i, check in enumerate(checks):
         status = check["status"]
         msg = check["msg"]
@@ -56,25 +102,14 @@ def print_checks(checks):
         warning = counter['Warning'] / S *100
         error = counter['Error'] / S *100
  
-        bar_placeholder.markdown(colored_bar(success, warning, error), unsafe_allow_html=True)
+        completed = min(round(100*(S/float(N))), 100)
+        bar_placeholder.markdown(colored_bar(success, warning, error, completed), unsafe_allow_html=True)
 
     # finally add the legend
-    st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; width: 50%;">
-             <div style="display: flex; align-items: center;">
-                 <div style="width: 20px; height: 20px; background-color: green; margin-right: 5px;"></div>
-                 <span>Success ({counter['Success']})</span>
-             </div>
-             <div style="display: flex; align-items: center;">
-                 <div style="width: 20px; height: 20px; background-color: yellow; margin-right: 5px;"></div>
-                 <span>Warning ({counter['Warning']})</span>
-             </div>
-             <div style="display: flex; align-items: center;">
-                 <div style="width: 20px; height: 20px; background-color: red; margin-right: 5px;"></div>
-                 <span>Error ({counter['Error']})</span>
-             </div>
-         </div>
-         """, unsafe_allow_html=True)
+    _, col2, _ = st.columns([1, 4, 1])
+    with col2:
+        add_legend(counter['Success'], counter['Warning'], counter['Error'])    
+
 
     # prints all message
     for error in msgs["Error"]:
@@ -83,13 +118,15 @@ def print_checks(checks):
         st.warning(warning)
     for success in msgs["Success"]:
         st.success(success)
-    return msgs
+    return dict(msgs)
 
 
 def main():
     st.sidebar.write("Provided by the [Sequana teams](https://github.com/sequana/sequana)")
     st.sidebar.image("imgs/logo_256x256.png")
-    st.title("Sample Sheet and Design Validator")
+    st.title(f"Sample Sheet and Design Validator (v{version})")
+    if 'code' not in st.session_state:
+        st.session_state.code = ""  
 
     menu = ["Sample Sheet Validation (Illumina)", "Examples", "About"]
 
@@ -101,17 +138,35 @@ def main():
 
     if choice == "Sample Sheet Validation (Illumina)":
         st.markdown(
-            "Please select a validator from the left hand side menu (default is Illumina Sample Sheet). Valid examples are available [here](https://github.com/sequana/st_sample_sheet/)"
+            "Please provide a Sample Sheet file to validate here below. Valid examples are available [here](https://github.com/sequana/st_sample_sheet/ and in the Example section.)"
         )
-        st.subheader("Illumina case", divider="blue")
+        st.subheader("Input SampleSheet file", divider="blue")
 
-        data_file = st.file_uploader(
-            "Drop a sample sheet here below and press the **Process** button. ", type=["csv", "txt"]
-        )
+
+        # create a 3-column layout
+        col1, col2, col3 = st.columns([4, 1, 4])
+        with col1:
+            data_file = st.file_uploader(
+                "Drop a sample sheet here below and press the **Process** button. ", type=["csv", "txt"]
+            )
+        with col2: 
+            # Centered "OR" text
+            st.markdown("<div style='text-align: center;'><br><br>OR</div>", unsafe_allow_html=True)
+
+        with col3:
+            code = st.text_area("Paste your code here and press the **Process** button", value=st.session_state.code, key="code_area")
+
 
         if st.button("Process"):
 
-            samplesheet = data_file.read().decode()
+            try:
+                samplesheet = data_file.read().decode()
+                #st.experimental_rerun()
+            except:
+                samplesheet = code
+                data_file = None
+
+
             try:
                 process_sample_sheet(data_file, samplesheet)
             except Exception as err:
@@ -129,33 +184,74 @@ def main():
                 raise Exception(err)
 
     elif choice == "Examples":
+        st.write("Here are some valid sample sheets examples.")
         st.subheader("1 - Illumina Minimalist Example")
-        st.subheader("1 - Illumina Single end Example")
-        st.subheader("1 - Illumina Paired end Example")
+        st.write("""In this example, we simplify the sample sheet to keep only the [DATA] section and mandatory columns(index and Sample_ID). 
+                 Note that the 'Sample_ID' is not mandatory with bcl2fastq but we made it mandatory in this application (design choice)""")
+        st.code("""[Data]
+Sample_ID,index
+ID1,TGACCA
+ID2,CATTTT""")
+
+
+        st.subheader("2 - Illumina With two indices")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
         st.write(
-            """Here below is a simple Illumina Sample Sheet. We can see sections in square brackets.
-There are 4 of them. The [Header], [Reads], and [Settings] are optional (here [Settings] is missing.
-The  [Data] section is compulsary. According to the Illumina specs, the [Data] is also optional. In such case, all
+            """A more common example is shown here below. We can see several sections in square brackets.
+There should be 4 of them. Here, we show the [Header], [Reads] and [Data] sections. The [Settings] is missing here.
+According to the Illumina specs, all sections are optional including the [Data] section. However,  in such case, all
 called reads are stored as undetermined. Not very useful. We make the [Data] section mandatory."""
         )
         st.code(data, language="bash")
 
+        st.subheader("3 - Illumina one index and settings section")
+        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet_settings_single_index.csv"
+        r = requests.get(url, allow_redirects=True)
+        data = r.content.decode()
+        st.code(data, language="bash")
+
+        st.subheader("4 - Illumina example of a wrong sample sheet")
+        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/Bad_SampleSheet_alphanum.csv"
+        r = requests.get(url, allow_redirects=True)
+        data = r.content.decode()
 
     else:
         st.subheader("About")
         st.markdown(
-            "This application is part of the [Sequana Project](https://github.com/sequana), which is dedicated to NGS analysis. Please see the [online documentation](https://sequana.readthdocs.io) as well as https://sequana.github.io for more information; the code used in this application is based on the [IEM module](https://github.com/sequana/sequana) of the Sequana Python library"
+            "This application is part of the [Sequana Project](https://github.com/sequana), which is dedicated to NGS analysis. " 
+            "Please see the [online documentation](https://sequana.readthdocs.io) as well as https://sequana.github.io for more information."
+            "The code used in this application is based on the [IEM module](https://github.com/sequana/sequana) of the Sequana Python library."
+            "It was created based on the bcl2fastq documentation v2.20 and should users to demultiplex their data properly."
         )
         st.info("Application Author: Thomas Cokelaer")
         #st.info("Application Reviewer/Contributors: Laure Lemée, Etienne Kornobis, Rania Ouazahrou")
 
 
 def process_sample_sheet(data_file, samplesheet):
+    """
+    This function processes an uploaded sample sheet file and performs validation checks.
+    It saves the file locally, creates a SampleSheet object using the Sequana library,
+    and then validates the sample sheet. If errors are found, they are displayed in the
+    Streamlit application. The function also provides options to download the corrected
+    sample sheet file and view the data section as a CSV file.
+
+    Parameters:
+    data_file (FileIO): The uploaded sample sheet file.
+    samplesheet (str): The content of the sample sheet file.
+
+    Returns:
+    None
+    """
+    st.write('header')
     if data_file is not None:
         file_details = {"Filename": data_file.name, "FileType": data_file.type, "FileSize": data_file.size}
+    else:
+        pass
+
+    if 1==1:
+
 
         # read to save locally
         #samplesheet = data_file.read().decode()
@@ -213,41 +309,6 @@ def process_sample_sheet(data_file, samplesheet):
         )
         df = iem.df.copy()
         st.write(df)
-
-
-def get_colored_bar(checks):
-    def colored_bar(success, warning, error):
-        return f"""
-        <div style="display: flex; width: 100%; height: 30px;">
-            <div style="width: {success}%; background-color: green;"></div>
-            <div style="width: {warning}%; background-color: yellow;"></div>
-            <div style="width: {error}%; background-color: red;"></div>
-        </div>
-        """
-
-    # Proportions for success, warning, and error
-
-    # Ensure the proportions sum up to 100
-    st.markdown(colored_bar(success_percentage, warning_percentage, error_percentage), unsafe_allow_html=True)
-
-    # Add a legend
-    st.markdown("""
-        <div style="display: flex; justify-content: space-between; width: 50%;">
-            <div style="display: flex; align-items: center;">
-                <div style="width: 20px; height: 20px; background-color: green; margin-right: 5px;"></div>
-                <span>Success</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-                <div style="width: 20px; height: 20px; background-color: yellow; margin-right: 5px;"></div>
-                <span>Warning</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-                <div style="width: 20px; height: 20px; background-color: red; margin-right: 5px;"></div>
-                <span>Error</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
 
 
 
