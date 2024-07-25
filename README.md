@@ -23,9 +23,14 @@ and for v4.0 of bclconvert: https://support-docs.illumina.com/SW/BCL_Convert_v4.
 
 
 # Local instance
-
+    
     git clone https://github.com/sequana/webapp_samplesheet check_my_sample_sheet
     cd check_my_sample_sheet
+
+    # You will need to install requirements (sequana and streamlit)
+    pip install --file requirements.txt
+
+    # and should ne ready to test the appliction locally in your browser 
     streamlit run app.py
 
 

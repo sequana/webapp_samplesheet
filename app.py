@@ -121,12 +121,14 @@ def print_checks(checks):
     return dict(msgs)
 
 
+if "code" not in st.session_state:
+    st.session_state.code = ""
+
+
 def main():
     st.sidebar.write("Provided by the [Sequana teams](https://github.com/sequana/sequana)")
     st.sidebar.image("imgs/logo_256x256.png")
     st.title(f"Sample Sheet and Design Validator (v{version})")
-    if "code" not in st.session_state:
-        st.session_state.code = ""
 
     menu = ["Sample Sheet Validation (Illumina)", "Examples", "About"]
 
@@ -137,8 +139,9 @@ def main():
         )
 
     if choice == "Sample Sheet Validation (Illumina)":
+
         st.markdown(
-            "Please provide a Sample Sheet file to validate here below. See examples (here)[https://github.com/sequana/st_sample_sheet/] (and Example section.)"
+            "Please provide an Illumina Sample Sheet file for validation below. See examples [here](https://github.com/sequana/st_sample_sheet/) (and in the Example section)."
         )
         st.subheader("Input SampleSheet file", divider="blue")
 
@@ -146,7 +149,7 @@ def main():
         col1, col2, col3 = st.columns([4, 1, 4])
         with col1:
             data_file = st.file_uploader(
-                "Drop a sample sheet here below and press the **Process** button. ", type=["csv", "txt"]
+                "Drop a sample sheet below and press the **Process** button. ", type=["csv", "txt"]
             )
         with col2:
             # Centered "OR" text
@@ -154,7 +157,7 @@ def main():
 
         with col3:
             code = st.text_area(
-                "Paste your code here and press the **Process** button", value=st.session_state.code, key="code_area"
+                "Paste your code here and press the **Process** button.", value=st.session_state.code, key="code_area"
             )
 
         if st.button(":gear: Process :gear:"):
@@ -163,7 +166,7 @@ def main():
                 samplesheet = data_file.read().decode()
                 # st.experimental_rerun()
             except:
-                samplesheet = code
+                samplesheet = code  # if there is no drag/drop data, we use the pasted code (if any)
                 data_file = None
 
             try:
@@ -188,7 +191,7 @@ def main():
 
     elif choice == "Examples":
         st.write("Here are some valid sample sheets examples.")
-        st.subheader("1 - Illumina Minimalist Example")
+        st.subheader("1 - Minimalist Example (only [Data] section)")
         st.write(
             """In this example, we simplify the sample sheet to keep only the [DATA] section and mandatory columns(index and Sample_ID).
                  Note that the 'Sample_ID' is not mandatory with bcl2fastq but we made it mandatory in this application (design choice)"""
@@ -200,7 +203,7 @@ ID1,TGACCA
 ID2,CATTTT"""
         )
 
-        st.subheader("2 - Illumina With two indices")
+        st.subheader("2 - [Data] section with dual indexing and no [settings] section")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
@@ -212,16 +215,19 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
         )
         st.code(data, language="bash")
 
-        st.subheader("3 - Illumina one index and settings section")
-        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet_settings_single_index.csv"
+        st.subheader("3 - [Data] section with single-index and a [Settings] section")
+        url = (
+            "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet_settings_index.csv"
+        )
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
         st.code(data, language="bash")
 
-        st.subheader("4 - Illumina example of a wrong sample sheet")
+        st.subheader("4 - Example of an erroneous sample sheet (wrong sample ID name)")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/Bad_SampleSheet_alphanum.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
+        st.code(data, language="bash")
 
     else:
         st.subheader("About")
@@ -229,10 +235,11 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
             "This application is part of the [Sequana Project](https://github.com/sequana), which is dedicated to NGS analysis. "
             "Please see the [online documentation](https://sequana.readthdocs.io) as well as https://sequana.github.io for more information."
             "The code used in this application is based on the [IEM module](https://github.com/sequana/sequana) of the Sequana Python library."
-            "It was created based on the bcl2fastq documentation v2.20 and should users to demultiplex their data properly."
+            "It was created based on the bcl2fastq documentation v2.20 and should be of interest for users willing to demultiplex their data properly."
         )
-        st.info("Application Author: Thomas Cokelaer")
-        # st.info("Application Reviewer/Contributors: Laure Lemée, Etienne Kornobis, Rania Ouazahrou")
+        st.info(
+            "Application Author: Thomas Cokelaer\n\nIEM module provided by The Sequana Team\n\nOriginal beta testing: Laure Lemée, Etienne Kornobis, Rania Ouazahrou"
+        )
 
 
 def process_sample_sheet(data_file, samplesheet):
