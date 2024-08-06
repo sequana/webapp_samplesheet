@@ -1,0 +1,17 @@
+[Header];;;;;;
+IEMFileVersion;4;;;
+Investigator Name;;;;
+Experiment Name;160104-SR-310v2-std;;
+Chemistry;Default;;;;
+;;;;;;;;;;
+[Reads];;;;;;;;
+315;;;;
+;;;
+[Settings];;;;
+Adapter;AGATCGGAAGAGCACACGTCTGAACTCCAGTCA;;;
+AdapterRead2;AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT;;;
+;;;
+[Data];;;
+Sample_ID;Sample_Name;I7_Index_ID;index;Sample_Project
+A;;NF01;CGATGT;
+B;;NF03;ACAGTG;

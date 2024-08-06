@@ -130,7 +130,7 @@ def main():
     st.sidebar.image("imgs/logo_256x256.png")
     st.title(f"Sample Sheet and Design Validator (v{version})")
 
-    menu = ["Sample Sheet Validation (Illumina)", "Examples", "About"]
+    menu = ["Sample Sheet Validation (Illumina)", "Examples", "About", "How to cite"]
 
     # 1. as sidebar menu
     with st.sidebar:
@@ -229,16 +229,30 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
         data = r.content.decode()
         st.code(data, language="bash")
 
-    else:
+        st.subheader("5 - Example of an erroneous sample sheet (extra semicolons at the end)")
+        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/Bad_SampleSheet_extra_semicolons.csv"
+        r = requests.get(url, allow_redirects=True)
+        data = r.content.decode()
+        st.code(data, language="bash")
+
+    elif choice == "About":
         st.subheader("About")
         st.markdown(
             "This application is part of the [Sequana Project](https://github.com/sequana), which is dedicated to NGS analysis. "
             "Please see the [online documentation](https://sequana.readthdocs.io) as well as https://sequana.github.io for more information."
             "The code used in this application is based on the [IEM module](https://github.com/sequana/sequana) of the Sequana Python library."
             "It was created based on the bcl2fastq documentation v2.20 and should be of interest for users willing to demultiplex their data properly."
+            "\n\nThe different checks performed are described in this paper: [biorxiv](link)"
         )
         st.info(
             "Application Author: Thomas Cokelaer\n\nIEM module provided by The Sequana Team\n\nOriginal beta testing: Laure Lemée, Etienne Kornobis, Rania Ouazahrou"
+        )
+    else:
+        st.subheader("How to cite ? ")
+        st.info("Check My Sample Sheet application (this website):\n\nLemée et al [biorxiv](link)")
+
+        st.info(
+            "The Sequana application to check the sample sheet: \n\nCokelaer et al, (2017), 'Sequana': a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI [doi:10.21105/joss.00352](https://joss.theoj.org/papers/10.21105/joss.00352)"
         )
 
 
