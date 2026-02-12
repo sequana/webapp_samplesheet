@@ -1,2 +1,2 @@
-sequana==0.17.1
 streamlit_option_menu
+colorlog

@@ -1,0 +1,12 @@
+Bootstrap: docker
+From: python:3.14-slim
+
+%files
+    app /app
+
+%post
+    python3 -m pip install -U uv
+    uv pip install --system -r /app/requirements.txt
+
+%startscript
+    cd /app && python3 -m streamlit run --server.headless true --server.address {{ SERVER_ADDRESS }} app.py
