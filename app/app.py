@@ -17,14 +17,16 @@ from collections import defaultdict
 
 import requests
 import streamlit as st
-from sequana.iem import SampleSheet
+from samplesheet import SampleSheet
 from streamlit_option_menu import option_menu
 
 st.set_page_config(
     page_title="Illumina Sample Sheet Validator",
     page_icon="imgs/logo_256x256.png",
     layout="wide",
-    menu_items={"Report a bug": "https://github.com/sequana/webapp_samplesheet/issues/new/choose"},
+    menu_items={
+        "Report a bug": "https://github.com/sequana/webapp_samplesheet/issues/new/choose"
+    },
 )
 
 version = "1.0.0"
@@ -104,7 +106,9 @@ def print_checks(checks):
         error = counter["Error"] / S * 100
 
         completed = min(round(100 * (S / float(N))), 100)
-        bar_placeholder.markdown(colored_bar(success, warning, error, completed), unsafe_allow_html=True)
+        bar_placeholder.markdown(
+            colored_bar(success, warning, error, completed), unsafe_allow_html=True
+        )
 
     # finally add the legend
     _, col2, _ = st.columns([1, 4, 1])
@@ -126,7 +130,9 @@ if "code" not in st.session_state:
 
 
 def main():
-    st.sidebar.write("Provided by the [Sequana teams](https://github.com/sequana/sequana)")
+    st.sidebar.write(
+        "Provided by the [Sequana teams](https://github.com/sequana/sequana)"
+    )
     st.sidebar.image("imgs/logo_256x256.png")
     st.title(f"Sample Sheet and Design Validator (v{version})")
 
@@ -135,7 +141,11 @@ def main():
     # 1. as sidebar menu
     with st.sidebar:
         choice = option_menu(
-            "Main Menu", menu, icons=["gear", "gear", "cloud-upload", ""], menu_icon="cast", default_index=0
+            "Main Menu",
+            menu,
+            icons=["gear", "gear", "cloud-upload", ""],
+            menu_icon="cast",
+            default_index=0,
         )
 
     if choice == "Sample Sheet Validation (Illumina)":
@@ -149,15 +159,21 @@ def main():
         col1, col2, col3 = st.columns([4, 1, 4])
         with col1:
             data_file = st.file_uploader(
-                "Drop a sample sheet below and press the **Process** button. ", type=["csv", "txt"]
+                "Drop a sample sheet below and press the **Process** button. ",
+                type=["csv", "txt"],
             )
         with col2:
             # Centered "OR" text
-            st.markdown("<div style='text-align: center;'><br><br>OR</div>", unsafe_allow_html=True)
+            st.markdown(
+                "<div style='text-align: center;'><br><br>OR</div>",
+                unsafe_allow_html=True,
+            )
 
         with col3:
             code = st.text_area(
-                "Paste your code here and press the **Process** button.", value=st.session_state.code, key="code_area"
+                "Paste your code here and press the **Process** button.",
+                value=st.session_state.code,
+                key="code_area",
             )
 
         if st.button(":gear: Process :gear:"):
@@ -216,9 +232,7 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
         st.code(data, language="bash")
 
         st.subheader("3 - [Data] section with single-index and a [Settings] section")
-        url = (
-            "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet_settings_index.csv"
-        )
+        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet_settings_index.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
         st.code(data, language="bash")
@@ -229,7 +243,9 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
         data = r.content.decode()
         st.code(data, language="bash")
 
-        st.subheader("5 - Example of an erroneous sample sheet (extra semicolons at the end)")
+        st.subheader(
+            "5 - Example of an erroneous sample sheet (extra semicolons at the end)"
+        )
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/Bad_SampleSheet_extra_semicolons.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
@@ -249,7 +265,9 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
         )
     else:
         st.subheader("How to cite ? ")
-        st.info("Check My Sample Sheet application (this website):\n\nLemée L. et al [researchsquare](https://www.researchsquare.com/article/rs-5268893/v1)")
+        st.info(
+            "Check My Sample Sheet application (this website):\n\nLemée L. et al [researchsquare](https://www.researchsquare.com/article/rs-5268893/v1)"
+        )
 
         st.info(
             "The Sequana application to check the sample sheet: \n\nCokelaer T. et al, (2017), 'Sequana': a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI [doi:10.21105/joss.00352](https://joss.theoj.org/papers/10.21105/joss.00352)"
@@ -272,11 +290,15 @@ def process_sample_sheet(data_file, samplesheet):
     None
     """
     if data_file is not None:
-        file_details = {"Filename": data_file.name, "FileType": data_file.type, "FileSize": data_file.size}
+        file_details = {
+            "Filename": data_file.name,
+            "FileType": data_file.type,
+            "FileSize": data_file.size,
+        }
     else:
         pass
 
-    if 1 == 1:
+    if True:
 
         # read to save locally
         # samplesheet = data_file.read().decode()
