@@ -14,6 +14,7 @@
 import tempfile
 import time
 from collections import defaultdict
+from pathlib import Path
 
 import requests
 import streamlit as st
@@ -121,12 +122,24 @@ def print_checks(checks):
     return dict(msgs)
 
 
-if "code" not in st.session_state:
-    st.session_state.code = ""
+if "code_input" not in st.session_state:
+    st.session_state.code_input = ""
+
+
+def load_example(filename):
+    """Load example file from examples directory."""
+    examples_dir = Path(__file__).parent / "examples"
+    with open(examples_dir / filename, "r") as f:
+        return f.read()
+
+
+def set_example(filename):
+    """Callback to load example into the textarea session state."""
+    st.session_state.code_input = load_example(filename)
 
 
 def main():
-    st.sidebar.write("Provided by the [Sequana teams](https://github.com/sequana/sequana)")
+    st.sidebar.write("Provided by the [Sequana team](https://github.com/sequana/sequana)")
     st.sidebar.image("imgs/logo_256x256.png")
     st.title(f"Sample Sheet and Design Validator (v{version})")
 
@@ -137,13 +150,22 @@ def main():
         choice = option_menu(
             "Main Menu", menu, icons=["gear", "gear", "cloud-upload", ""], menu_icon="cast", default_index=0
         )
+        st.markdown(
+            "**Resources:**\n\n"
+            "- [Source code](https://github.com/sequana/webapp_samplesheet)\n"
+            "- [Report a bug](https://github.com/sequana/webapp_samplesheet/issues/new/choose)\n"
+            "- [Sequana documentation](https://sequana.readthedocs.io)"
+        )
 
     if choice == "Sample Sheet Validation (Illumina)":
 
         st.markdown(
-            "Please provide an Illumina Sample Sheet file for validation below. See examples [here](https://github.com/sequana/st_sample_sheet/) (and in the Example section)."
+            "This tool validates Illumina sample sheets against the bcl2fastq v2.20 specification. "
+            "It checks the structure, mandatory sections, sample identifiers, indexes, and more. "
+            "Provide a sample sheet below for validation, or load one of the examples to try the tool. "
+            "More examples are available in the **Examples** section of the menu."
         )
-        st.subheader("Input SampleSheet file", divider="blue")
+        st.subheader("Input Sample Sheet", divider="blue")
 
         # create a 3-column layout
         col1, col2, col3 = st.columns([4, 1, 4])
@@ -157,8 +179,21 @@ def main():
 
         with col3:
             code = st.text_area(
-                "Paste your code here and press the **Process** button.", value=st.session_state.code, key="code_area"
+                "Paste your sample sheet content here and press the **Process** button.", key="code_input"
             )
+
+        st.subheader("Load an Example", divider="blue")
+        st.caption(
+            "Click a button to load a sample sheet into the text area above. "
+            "Examples 1 and 2 are valid sheets; Example 3 is invalid and demonstrates how errors are reported."
+        )
+        example_col1, example_col2, example_col3 = st.columns(3)
+        with example_col1:
+            st.button("Example 1: Dual indexing", on_click=set_example, args=("sample_sheet.csv",))
+        with example_col2:
+            st.button("Example 2: Single index + Settings", on_click=set_example, args=("sample_sheet_settings_index.csv",))
+        with example_col3:
+            st.button("Example 3: Invalid (bad sample ID)", on_click=set_example, args=("Bad_SampleSheet_alphanum.csv",))
 
         if st.button(":gear: Process :gear:"):
 
@@ -179,22 +214,23 @@ def main():
                 samplesheet = "\n".join(["    " + x for x in samplesheet.split("\n")])
                 params = {
                     "title": "Automatic error from the check-my-sample-sheet website",
-                    "body": f"Dear developer(s),\n\nI encountered an expected error using the following samplesheet \n\n{samplesheet}\n\n Here is the full error message\n\n     {err} \n\n Please tell us what you think might be the reason for the error",
+                    "body": f"Dear developer(s),\n\nI encountered an unexpected error using the following sample sheet:\n\n{samplesheet}\n\nHere is the full error message:\n\n     {err}\n\nPlease let us know what you think might be the reason for the error.",
                 }
                 url = f"{base_url}?{urllib.parse.urlencode(params)}"
                 st.markdown(
-                    f'<div style="background-color: #ffcccc; padding: 10px; border-radius: 5px;"> Sorry but and unknown error occurred. Please create an issue <a href="{url}">here</a> to report it. A page will open; you will need to clik on the "Submit new issue" button </div>',
+                    f'<div style="background-color: #ffcccc; padding: 10px; border-radius: 5px;"> Sorry, an unknown error occurred. Please create an issue <a href="{url}">here</a> to report it. A page will open; you will need to click on the "Submit new issue" button. </div>',
                     unsafe_allow_html=True,
                 )
 
                 raise Exception(err)
 
     elif choice == "Examples":
-        st.write("Here are some valid sample sheets examples.")
+        st.write("Below are several sample sheet examples, both valid and invalid, to illustrate the expected format.")
         st.subheader("1 - Minimalist Example (only [Data] section)")
         st.write(
-            """In this example, we simplify the sample sheet to keep only the [DATA] section and mandatory columns(index and Sample_ID).
-                 Note that the 'Sample_ID' is not mandatory with bcl2fastq but we made it mandatory in this application (design choice)"""
+            "In this example, the sample sheet is simplified to keep only the [Data] section and the mandatory columns "
+            "(index and Sample_ID). Note that 'Sample_ID' is not strictly mandatory in bcl2fastq, but we make it "
+            "mandatory in this application as a design choice for better traceability."
         )
         st.code(
             """[Data]
@@ -203,19 +239,20 @@ ID1,TGACCA
 ID2,CATTTT"""
         )
 
-        st.subheader("2 - [Data] section with dual indexing and no [settings] section")
+        st.subheader("2 - [Data] section with dual indexing and no [Settings] section")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
         st.write(
-            """A more common example is shown here below. We can see several sections in square brackets.
-There should be 4 of them. Here, we show the [Header], [Reads] and [Data] sections. The [Settings] is missing here.
-According to the Illumina specs, all sections are optional including the [Data] section. However,  in such case, all
-called reads are stored as undetermined. Not very useful. We make the [Data] section mandatory."""
+            "A more common example is shown below. The Illumina sample sheet uses sections enclosed in square brackets. "
+            "Up to four sections may appear: [Header], [Reads], [Settings] and [Data]. This example shows the [Header], "
+            "[Reads] and [Data] sections (the [Settings] section is missing). According to the Illumina specification, "
+            "all sections are optional, including [Data]. However, when [Data] is missing, all reads are stored as "
+            "undetermined, which is rarely useful. For this reason, we require the [Data] section in this application."
         )
         st.code(data, language="bash")
 
-        st.subheader("3 - [Data] section with single-index and a [Settings] section")
+        st.subheader("3 - [Data] section with single index and a [Settings] section")
         url = (
             "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet_settings_index.csv"
         )
@@ -223,13 +260,13 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
         data = r.content.decode()
         st.code(data, language="bash")
 
-        st.subheader("4 - Example of an erroneous sample sheet (wrong sample ID name)")
+        st.subheader("4 - Example of an erroneous sample sheet (invalid sample ID name)")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/Bad_SampleSheet_alphanum.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
         st.code(data, language="bash")
 
-        st.subheader("5 - Example of an erroneous sample sheet (extra semicolons at the end)")
+        st.subheader("5 - Example of an erroneous sample sheet (extra trailing semicolons)")
         url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/Bad_SampleSheet_extra_semicolons.csv"
         r = requests.get(url, allow_redirects=True)
         data = r.content.decode()
@@ -239,20 +276,21 @@ called reads are stored as undetermined. Not very useful. We make the [Data] sec
         st.subheader("About")
         st.markdown(
             "This application is part of the [Sequana Project](https://github.com/sequana), which is dedicated to NGS analysis. "
-            "Please see the [online documentation](https://sequana.readthdocs.io) as well as https://sequana.github.io for more information."
-            "The code used in this application is based on the [IEM module](https://github.com/sequana/sequana) of the Sequana Python library."
-            "It was created based on the bcl2fastq documentation v2.20 and should be of interest for users willing to demultiplex their data properly."
-            "\n\nThe different checks performed are described in this preprint: [researchsquare](https://www.researchsquare.com/article/rs-5268893/v1)"
+            "Please see the [online documentation](https://sequana.readthedocs.io) as well as https://sequana.github.io for more information. "
+            "The code used in this application is based on the [IEM module](https://github.com/sequana/sequana) of the Sequana Python library. "
+            "It was developed based on the bcl2fastq documentation (v2.20) and is intended for users who want to demultiplex their data properly. "
+            "The source code for this web application is available on [GitHub](https://github.com/sequana/webapp_samplesheet)."
+            "\n\nThe different checks performed are described in this preprint: [Research Square](https://www.researchsquare.com/article/rs-5268893/v1)."
         )
         st.info(
             "Application Author: Thomas Cokelaer\n\nIEM module provided by The Sequana Team\n\nOriginal beta testing: Laure Lemée, Etienne Kornobis, Rania Ouazahrou"
         )
     else:
-        st.subheader("How to cite ? ")
-        st.info("Check My Sample Sheet application (this website):\n\nLemée L. et al [researchsquare](https://www.researchsquare.com/article/rs-5268893/v1)")
+        st.subheader("How to cite?")
+        st.info("Check My Sample Sheet application (this website):\n\nLemée L. et al, [Research Square](https://www.researchsquare.com/article/rs-5268893/v1)")
 
         st.info(
-            "The Sequana application to check the sample sheet: \n\nCokelaer T. et al, (2017), 'Sequana': a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI [doi:10.21105/joss.00352](https://joss.theoj.org/papers/10.21105/joss.00352)"
+            "The Sequana framework used to check the sample sheet:\n\nCokelaer T. et al, (2017), 'Sequana': a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI [doi:10.21105/joss.00352](https://joss.theoj.org/papers/10.21105/joss.00352)"
         )
 
 
@@ -291,16 +329,16 @@ def process_sample_sheet(data_file, samplesheet):
             iem.validate()
         except SystemExit as err:
             st.header("Validation Results", divider="blue")
-            msg = "Error(s) found. :sob: See message below from Sequana"
+            msg = "Error(s) found. :sob: See the message below from Sequana for details."
             st.error(msg)
             st.info(err)
         else:
             st.header("Validation Results", divider="blue")
             # emoji within div do not seem to work
-            msg = ":champagne: Sample Sheet looks correct. :champagne:"
+            msg = ":champagne: Your sample sheet looks correct. :champagne:"
             st.success(msg)
         # =============================================================== validation
-        st.subheader(" Details about the checks", divider="blue")
+        st.subheader("Details about the checks", divider="blue")
         checks = iem.checker()
 
         msgs = print_checks(checks)
@@ -313,7 +351,10 @@ def process_sample_sheet(data_file, samplesheet):
         if len(msgs["Error"]):
             st.subheader("Corrected file", divider="blue")
             st.caption(
-                "Quick fix here below gets rid of extra trailing ; . Other types of errors are difficult to correct automatically. You will need to correct the file manually. We strongly recommend you to use IEM software (from Illumina) for that. Otherwise, to quickly edit the file, do not use Excel because the sample sheet is not a CSV file despite the fact that the extension is usually .csv   "
+                "The quick fix below removes extra trailing semicolons. Other types of errors are difficult to correct "
+                "automatically, so you will need to fix the file manually. We strongly recommend using the IEM software "
+                "from Illumina for that purpose. If you need to edit the file quickly, do not use Excel: although the "
+                "extension is usually .csv, an Illumina sample sheet is not a standard CSV file and Excel may corrupt it."
             )
             with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
                 iem.quick_fix(fout.name)
@@ -330,7 +371,8 @@ def process_sample_sheet(data_file, samplesheet):
         # =============================================================== data section
         st.subheader("Data section", divider="blue")
         st.caption(
-            "For convenience, we show the data section here below as a CSV file. It should be coherent (e.g. index on a single column"
+            "For convenience, the [Data] section is shown below as a parsed table. "
+            "Check that the values are consistent with your expectations (for example, that each index appears in a single column)."
         )
         df = iem.df.copy()
         st.write(df)
