@@ -5,19 +5,20 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent
+PACKAGE_DIR = PROJECT_ROOT / "check_my_sample_sheet"
 sys.path.insert(0, str(PROJECT_ROOT))
 
 
 @pytest.fixture
 def app_path():
     """Path to the Streamlit app entrypoint."""
-    return str(PROJECT_ROOT / "app.py")
+    return str(PACKAGE_DIR / "app.py")
 
 
 @pytest.fixture
 def examples_dir():
     """Path to the examples directory."""
-    return PROJECT_ROOT / "examples"
+    return PACKAGE_DIR / "examples"
 
 
 @pytest.fixture

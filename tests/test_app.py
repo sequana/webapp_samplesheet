@@ -19,7 +19,7 @@ def test_default_menu_is_validation(app_path):
     at = AppTest.from_file(app_path, default_timeout=APP_TIMEOUT)
     at.run()
     # Title rendered on every page
-    assert any("Sample Sheet and Design Validator" in t.value for t in at.title)
+    assert any("Check My Sample Sheet" in t.value for t in at.title)
     # Validation page has the Input subheader
     subheaders = [s.value for s in at.subheader]
     assert "Input Sample Sheet" in subheaders
