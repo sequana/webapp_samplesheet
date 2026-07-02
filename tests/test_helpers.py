@@ -1,7 +1,7 @@
 """Unit tests for helper functions in app.py."""
 import pytest
 
-from app import load_example
+from check_my_sample_sheet.app import load_example
 
 
 def test_load_example_valid_returns_content():

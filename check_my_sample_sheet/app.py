@@ -18,12 +18,17 @@ from pathlib import Path
 
 import requests
 import streamlit as st
-from sequana.iem import SampleSheet
+from sequana.iem import SampleSheetFactory, get_sample_sheet_version
 from streamlit_option_menu import option_menu
 
+# directory holding this module, used to resolve packaged assets (imgs, examples)
+# regardless of the current working directory.
+HERE = Path(__file__).resolve().parent
+LOGO = str(HERE / "imgs" / "logo_256x256.png")
+
 st.set_page_config(
-    page_title="Illumina Sample Sheet Validator",
-    page_icon="imgs/logo_256x256.png",
+    page_title="Check My Sample Sheet",
+    page_icon=LOGO,
     layout="wide",
     menu_items={"Report a bug": "https://github.com/sequana/webapp_samplesheet/issues/new/choose"},
 )
@@ -125,6 +130,11 @@ def print_checks(checks):
 if "code_input" not in st.session_state:
     st.session_state.code_input = ""
 
+# used to reset the file_uploader when an example is loaded: bumping this counter
+# changes the widget key, which forces Streamlit to drop any previously uploaded file.
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
+
 
 def load_example(filename):
     """Load example file from examples directory."""
@@ -134,14 +144,19 @@ def load_example(filename):
 
 
 def set_example(filename):
-    """Callback to load example into the textarea session state."""
+    """Callback to load example into the textarea session state.
+
+    Also resets the file_uploader (by bumping its key) so a previously uploaded
+    file does not silently take precedence over the loaded example.
+    """
     st.session_state.code_input = load_example(filename)
+    st.session_state.uploader_key += 1
 
 
 def main():
     st.sidebar.write("Provided by the [Sequana team](https://github.com/sequana/sequana)")
-    st.sidebar.image("imgs/logo_256x256.png")
-    st.title(f"Sample Sheet and Design Validator (v{version})")
+    st.sidebar.image(LOGO)
+    st.title(f"Check My Sample Sheet (v{version})")
 
     menu = ["Sample Sheet Validation (Illumina)", "Examples", "About", "How to cite"]
 
@@ -160,7 +175,8 @@ def main():
     if choice == "Sample Sheet Validation (Illumina)":
 
         st.markdown(
-            "This tool validates Illumina sample sheets against the bcl2fastq v2.20 specification. "
+            "This tool validates Illumina sample sheets. Both the **v1** format (bcl2fastq v2.20) and the "
+            "**v2** format (BCL Convert) are supported; the version is detected automatically. "
             "It checks the structure, mandatory sections, sample identifiers, indexes, and more. "
             "Provide a sample sheet below for validation, or load one of the examples to try the tool. "
             "More examples are available in the **Examples** section of the menu."
@@ -171,7 +187,9 @@ def main():
         col1, col2, col3 = st.columns([4, 1, 4])
         with col1:
             data_file = st.file_uploader(
-                "Drop a sample sheet below and press the **Process** button. ", type=["csv", "txt"]
+                "Drop a sample sheet below and press the **Process** button. ",
+                type=["csv", "txt"],
+                key=f"uploader_{st.session_state.uploader_key}",
             )
         with col2:
             # Centered "OR" text
@@ -185,15 +203,18 @@ def main():
         st.subheader("Load an Example", divider="blue")
         st.caption(
             "Click a button to load a sample sheet into the text area above. "
-            "Examples 1 and 2 are valid sheets; Example 3 is invalid and demonstrates how errors are reported."
+            "Examples 1, 2 and 4 are valid sheets; Example 3 is invalid and demonstrates how errors are reported. "
+            "Example 4 is a v2 (BCL Convert) sheet, the others are v1 (bcl2fastq)."
         )
-        example_col1, example_col2, example_col3 = st.columns(3)
+        example_col1, example_col2, example_col3, example_col4 = st.columns(4)
         with example_col1:
-            st.button("Example 1: Dual indexing", on_click=set_example, args=("sample_sheet.csv",))
+            st.button("Example 1: Dual indexing (v1)", on_click=set_example, args=("sample_sheet.csv",))
         with example_col2:
-            st.button("Example 2: Single index + Settings", on_click=set_example, args=("sample_sheet_settings_index.csv",))
+            st.button("Example 2: Single index + Settings (v1)", on_click=set_example, args=("sample_sheet_settings_index.csv",))
         with example_col3:
             st.button("Example 3: Invalid (bad sample ID)", on_click=set_example, args=("Bad_SampleSheet_alphanum.csv",))
+        with example_col4:
+            st.button("Example 4: BCL Convert (v2)", on_click=set_example, args=("sample_sheet_v2_bclconvert.csv",))
 
         if st.button(":gear: Process :gear:"):
 
@@ -322,7 +343,13 @@ def process_sample_sheet(data_file, samplesheet):
         with tempfile.NamedTemporaryFile(delete=False, mode="w") as fout:
             fout.write(samplesheet)
             fout.close()
-            iem = SampleSheet(fout.name)
+            version = get_sample_sheet_version(fout.name)
+            iem = SampleSheetFactory(fout.name)
+
+        if version == "v2":
+            st.info(":information_source: Detected an Illumina **v2** sample sheet: validating against the **BCL Convert** specification.")
+        else:
+            st.info(":information_source: Detected an Illumina **v1** sample sheet: validating against the **bcl2fastq v2.20** specification.")
 
         try:
             # st.write(f"This sample sheet contains {len(iem.df)} samples")
