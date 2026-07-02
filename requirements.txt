@@ -1,4 +1,5 @@
-sequana==0.21.2
+# sequana >= 0.23.0 ships BCLConvert / SampleSheetFactory / get_sample_sheet_version
+sequana>=0.23.0
 streamlit>=1.28
 streamlit_option_menu
-setuptools
+requests

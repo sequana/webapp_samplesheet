@@ -1,0 +1,8 @@
+[Settings];;;;
+Adapter;AGATCGGAAGAGCACACGTCTGAACTCCAGTCA;;;
+AdapterRead2;AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT;;;
+;;;
+[Data];;;
+Sample_ID;Sample_Name;I7_Index_ID;index;Sample_Project
+A;;NF01;CGATGT;
+B;;NF03;ACAGTG;
