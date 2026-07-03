@@ -1,6 +1,7 @@
 # Check My Sample Sheet
 
 [![Tests](https://github.com/sequana/webapp_samplesheet/actions/workflows/tests.yml/badge.svg)](https://github.com/sequana/webapp_samplesheet/actions/workflows/tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/check-my-sample-sheet.svg)](https://pypi.org/project/check-my-sample-sheet/)
 [![Release](https://img.shields.io/github/v/release/sequana/webapp_samplesheet)](https://github.com/sequana/webapp_samplesheet/releases)
 [![License](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg)
