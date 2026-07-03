@@ -1,41 +1,44 @@
-[tool.poetry]
+[project]
 name = "check-my-sample-sheet"
 version = "1.0.0"
 description = "Streamlit web application to validate Illumina sample sheets (bcl2fastq v1 and BCL Convert v2)."
-authors = ["Thomas Cokelaer <cokelaer@gmail.com>"]
+authors = [{ name = "Thomas Cokelaer", email = "cokelaer@gmail.com" }]
 license = "BSD-3-Clause"
 readme = "README.md"
-homepage = "https://github.com/sequana/webapp_samplesheet"
-repository = "https://github.com/sequana/webapp_samplesheet"
-documentation = "https://github.com/sequana/webapp_samplesheet"
+requires-python = ">=3.9,<4.0"
 keywords = ["illumina", "samplesheet", "bcl2fastq", "bcl-convert", "sequana", "ngs"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
+dependencies = [
+    # sequana >= 0.23.0 ships BCLConvert / SampleSheetFactory / get_sample_sheet_version
+    "sequana>=0.23.0",
+    "streamlit>=1.28",
+    "streamlit-option-menu",
+    "requests",
+]
+
+[project.urls]
+homepage = "https://github.com/sequana/webapp_samplesheet"
+repository = "https://github.com/sequana/webapp_samplesheet"
+documentation = "https://github.com/sequana/webapp_samplesheet"
+
+[project.scripts]
+check-my-sample-sheet = "check_my_sample_sheet.__main__:main"
+
+[tool.poetry]
 packages = [{ include = "check_my_sample_sheet" }]
 include = ["check_my_sample_sheet/examples/*", "check_my_sample_sheet/imgs/*"]
-
-[tool.poetry.dependencies]
-python = ">=3.9,<4.0"
-# sequana >= 0.23.0 ships BCLConvert / SampleSheetFactory / get_sample_sheet_version
-sequana = ">=0.23.0"
-streamlit = ">=1.28"
-streamlit-option-menu = "*"
-requests = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
 pytest-cov = "*"
 
-[tool.poetry.scripts]
-check-my-sample-sheet = "check_my_sample_sheet.__main__:main"
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
