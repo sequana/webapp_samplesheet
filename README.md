@@ -39,6 +39,8 @@ Then launch the app (opens in your browser); extra arguments are forwarded to
 
 # Local instance (from source)
 
+Alternatively, the source code can be cloned and deployed directly, in which case `app.py` is present and can be passed to `streamlit` explicitly:
+
     git clone https://github.com/sequana/webapp_samplesheet
     cd webapp_samplesheet
 
