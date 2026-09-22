@@ -127,15 +127,6 @@ def print_checks(checks):
     return dict(msgs)
 
 
-if "code_input" not in st.session_state:
-    st.session_state.code_input = ""
-
-# used to reset the file_uploader when an example is loaded: bumping this counter
-# changes the widget key, which forces Streamlit to drop any previously uploaded file.
-if "uploader_key" not in st.session_state:
-    st.session_state.uploader_key = 0
-
-
 def load_example(filename):
     """Load example file from examples directory."""
     examples_dir = Path(__file__).parent / "examples"
@@ -154,6 +145,14 @@ def set_example(filename):
 
 
 def main():
+    if "code_input" not in st.session_state:
+        st.session_state.code_input = ""
+
+    # used to reset the file_uploader when an example is loaded: bumping this counter
+    # changes the widget key, which forces Streamlit to drop any previously uploaded file.
+    if "uploader_key" not in st.session_state:
+        st.session_state.uploader_key = 0
+
     st.sidebar.write("Provided by the [Sequana team](https://github.com/sequana/sequana)")
     st.sidebar.image(LOGO)
     st.title(f"Check My Sample Sheet (v{version})")
