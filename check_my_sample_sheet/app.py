@@ -16,7 +16,6 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
-import requests
 import streamlit as st
 from sequana.iem import SampleSheetFactory, get_sample_sheet_version
 from streamlit_option_menu import option_menu
@@ -260,9 +259,7 @@ ID2,CATTTT"""
         )
 
         st.subheader("2 - [Data] section with dual indexing and no [Settings] section")
-        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet.csv"
-        r = requests.get(url, allow_redirects=True)
-        data = r.content.decode()
+        data = load_example("sample_sheet.csv")
         st.write(
             "A more common example is shown below. The Illumina sample sheet uses sections enclosed in square brackets. "
             "Up to four sections may appear: [Header], [Reads], [Settings] and [Data]. This example shows the [Header], "
@@ -273,23 +270,15 @@ ID2,CATTTT"""
         st.code(data, language="bash")
 
         st.subheader("3 - [Data] section with single index and a [Settings] section")
-        url = (
-            "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/sample_sheet_settings_index.csv"
-        )
-        r = requests.get(url, allow_redirects=True)
-        data = r.content.decode()
+        data = load_example("sample_sheet_settings_index.csv")
         st.code(data, language="bash")
 
         st.subheader("4 - Example of an erroneous sample sheet (invalid sample ID name)")
-        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/Bad_SampleSheet_alphanum.csv"
-        r = requests.get(url, allow_redirects=True)
-        data = r.content.decode()
+        data = load_example("Bad_SampleSheet_alphanum.csv")
         st.code(data, language="bash")
 
         st.subheader("5 - Example of an erroneous sample sheet (extra trailing semicolons)")
-        url = "https://raw.githubusercontent.com/sequana/webapp_samplesheet/main/examples/Bad_SampleSheet_extra_semicolons.csv"
-        r = requests.get(url, allow_redirects=True)
-        data = r.content.decode()
+        data = load_example("Bad_SampleSheet_extra_semicolons.csv")
         st.code(data, language="bash")
 
     elif choice == "About":
