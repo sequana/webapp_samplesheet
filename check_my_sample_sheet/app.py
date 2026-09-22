@@ -23,7 +23,8 @@ from streamlit_option_menu import option_menu
 # directory holding this module, used to resolve packaged assets (imgs, examples)
 # regardless of the current working directory.
 HERE = Path(__file__).resolve().parent
-LOGO = str(HERE / "imgs" / "logo_256x256.png")
+LOGO = str(HERE / "imgs" / "logo.png")
+SEQUANA_LOGO = str(HERE / "imgs" / "logo_sequana.png")
 
 st.set_page_config(
     page_title="Check My Sample Sheet",
@@ -152,8 +153,9 @@ def main():
     if "uploader_key" not in st.session_state:
         st.session_state.uploader_key = 0
 
-    st.sidebar.write("Provided by the [Sequana team](https://github.com/sequana/sequana)")
     st.sidebar.image(LOGO)
+    st.sidebar.write("Provided by the [Sequana team](https://github.com/sequana/sequana)")
+    st.sidebar.image(SEQUANA_LOGO)
     st.title(f"Check My Sample Sheet (v{version})")
 
     menu = ["Sample Sheet Validation (Illumina)", "Examples", "About", "How to cite"]
