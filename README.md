@@ -1,7 +1,6 @@
 # Check My Sample Sheet
 
 <img src="check_my_sample_sheet/imgs/logo.png" alt="logo" width="150"/>
-<img src="check_my_sample_sheet/imgs/logo_sequana.png" alt="sequana logo" width="100"/>
 
 [![Tests](https://github.com/sequana/webapp_samplesheet/actions/workflows/tests.yml/badge.svg)](https://github.com/sequana/webapp_samplesheet/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/check-my-sample-sheet.svg)](https://pypi.org/project/check-my-sample-sheet/)
@@ -15,7 +14,7 @@
 [![Stars](https://img.shields.io/github/stars/sequana/webapp_samplesheet?style=flat)](https://github.com/sequana/webapp_samplesheet/stargazers)
 ![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fcheck-my-sample-sheet.streamlit.app%2F&countColor=%23263759)
 
-This is a streamlit application that uses Sequana (github.com/sequana/sequana) **iem** modules to check Sample Sheets from Illumina sequencers. Both formats are supported and detected automatically:
+This is a streamlit application that uses [Sequana](https://github.com/sequana/sequana) **iem** modules to check Sample Sheets from Illumina sequencers. Both formats are supported and detected automatically:
 
 - **v1** (bcl2fastq): `[Data]` / `[Settings]` sections
 - **v2** (BCL Convert): `[BCLConvert_Data]` / `[BCLConvert_Settings]` sections

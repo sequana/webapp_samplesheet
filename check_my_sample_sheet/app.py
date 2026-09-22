@@ -153,9 +153,8 @@ def main():
     if "uploader_key" not in st.session_state:
         st.session_state.uploader_key = 0
 
-    st.sidebar.image(LOGO)
-    st.sidebar.write("Provided by the [Sequana team](https://github.com/sequana/sequana)")
-    st.sidebar.image(SEQUANA_LOGO)
+    st.sidebar.image(LOGO, width=230)
+    st.sidebar.image(SEQUANA_LOGO, width=205)
     st.title(f"Check My Sample Sheet (v{version})")
 
     menu = ["Sample Sheet Validation (Illumina)", "Examples", "About", "How to cite"]
